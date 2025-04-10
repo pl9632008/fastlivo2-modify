@@ -1,0 +1,20 @@
+image_width: 1920
+image_height: 1080
+camera_name: "rtsp2"
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [3856.78, 0, 945.335, 0, 3829.08, 580.422, 0, 0, 1]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.37972,0.130612,-0.00458177,-0.00441604, 0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [3856.78, 0, 945.335, 0,  0, 3829.08, 580.422, 0, 0, 0, 1,0]
