@@ -20,7 +20,7 @@ time_offset:
   exposure_time_init: 0.0
 
 preprocess:
-  point_filter_num: 5
+  point_filter_num: 3
   filter_size_surf: 0.1
   lidar_type: 4 # Livox Avia LiDAR
   scan_line: 6
@@ -77,7 +77,7 @@ evo:
   pose_output_en: false
 
 pcd_save:
-  pcd_save_en: true
+  pcd_save_en: false
   colmap_output_en: false # need to set interval = -1
   filter_size_pcd: 0.15
   interval: -1
