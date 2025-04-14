@@ -285,6 +285,7 @@ void LIVMapper::handleVIO()
     std::cout << "[ VIO ] No point!!!" << std::endl;
     return;
   }
+
     
   std::cout << "[ VIO ] Raw feature num: " << pcl_w_wait_pub->points.size() << std::endl;
 
@@ -340,6 +341,7 @@ void LIVMapper::handleLIO()
     std::cout << "[ LIO ]: No point!!!" << std::endl;
     return;
   }
+
 
   double t0 = omp_get_wtime();
 
@@ -915,7 +917,6 @@ bool LIVMapper::sync_packages(LidarMeasureGroup &meas)
       // larger than _lidar_frame_end_time,
       // make sure complete propagate.
       // printf("last_timestamp_imu, meas.lidar_frame_end_time : %lf,  %lf\n",last_timestamp_imu, meas.lidar_frame_end_time);
-
       // ROS_ERROR("out sync");
       return false;
     }
@@ -939,6 +940,7 @@ bool LIVMapper::sync_packages(LidarMeasureGroup &meas)
 
     meas.lio_vio_flg = LIO; // process lidar topic, so timestamp should be lidar scan end.
     meas.measures.push_back(m);
+
 
     if(meas.measures.size()>10){
       meas.measures.pop_front();
@@ -986,6 +988,7 @@ bool LIVMapper::sync_packages(LidarMeasureGroup &meas)
         return false;
       }
 
+
       if (img_capture_time > lid_newest_time || img_capture_time > imu_newest_time)
       {
    
@@ -1018,7 +1021,8 @@ bool LIVMapper::sync_packages(LidarMeasureGroup &meas)
       PointCloudXYZI().swap(*meas.pcl_proc_next);
 
       int lid_frame_num = lid_raw_data_buffer.size();
-      int max_size = meas.pcl_proc_cur->size() + 24000 * lid_frame_num;
+      int max_size = meas.pcl_proc_cur->size() + 45000 * lid_frame_num;
+
       meas.pcl_proc_cur->reserve(max_size);
       meas.pcl_proc_next->reserve(max_size);
       // deque<PointCloudXYZI::Ptr> lidar_buffer_tmp;

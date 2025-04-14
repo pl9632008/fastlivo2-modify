@@ -20,7 +20,7 @@ time_offset:
   exposure_time_init: 0.0
 
 preprocess:
-  point_filter_num: 3
+  point_filter_num: 7
   filter_size_surf: 0.1
   lidar_type: 4 # Livox Avia LiDAR
   scan_line: 6
@@ -57,9 +57,9 @@ lio:
   layer_init_num: [5, 5, 5, 5, 5]
 
 local_map:  
-  map_sliding_en: false
-  half_map_size: 100
-  sliding_thresh: 8
+  map_sliding_en: true
+  half_map_size: 60
+  sliding_thresh: 5
 
 uav:
   imu_rate_odom: false

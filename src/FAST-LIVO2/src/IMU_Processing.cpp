@@ -539,6 +539,7 @@ void ImuProcess::UndistortPcl(LidarMeasureGroup &lidar_meas, StatesGroup &state_
     pcl_wait_proc.clear();
     IMUpose.clear();
   }
+  // std::cout<<"IMUpose.size = "<<IMUpose.size()<<std::endl;
   // printf("[ IMU ] time forward: %lf, backward: %lf.\n", t1 - t0, omp_get_wtime() - t1);
 }
 

@@ -575,6 +575,9 @@ void VoxelMapManager::BuildVoxelMap()
     {
       VoxelOctoTree *octo_tree = new VoxelOctoTree(max_layer, 0, layer_init_num[0], max_points_num, planer_threshold);
       voxel_map_[position] = octo_tree;
+      // voxel_map_[position] = std::make_unique<VoxelOctoTree>(max_layer, 0, layer_init_num[0], max_points_num, planer_threshold);
+
+
       voxel_map_[position]->quater_length_ = voxel_size / 4;
       voxel_map_[position]->voxel_center_[0] = (0.5 + position.x) * voxel_size;
       voxel_map_[position]->voxel_center_[1] = (0.5 + position.y) * voxel_size;
@@ -636,8 +639,12 @@ void VoxelMapManager::UpdateVoxelMap(const std::vector<pointWithVar> &input_poin
       voxel_map_[position]->voxel_center_[1] = (0.5 + position.y) * voxel_size;
       voxel_map_[position]->voxel_center_[2] = (0.5 + position.z) * voxel_size;
       voxel_map_[position]->UpdateOctoTree(p_v);
+
     }
   }
+  std::cout<<"voxel_map_.size = "<<voxel_map_.size()<<std::endl;
+  std::cout<<"bucket_count() = "<<voxel_map_.bucket_count()<<std::endl;
+
 }
 
 void VoxelMapManager::BuildResidualListOMP(std::vector<pointWithVar> &pv_list, std::vector<PointToPlane> &ptpl_list)
@@ -838,7 +845,7 @@ void VoxelMapManager::pubSinglePlane(visualization_msgs::MarkerArray &plane_pub,
                                      const float alpha, const Eigen::Vector3d rgb)
 {
   visualization_msgs::Marker plane;
-  plane.header.frame_id = "camera_init";
+  plane.header.frame_id = "";
   plane.header.stamp = ros::Time();
   plane.ns = plane_ns;
   plane.id = single_plane.id_;
