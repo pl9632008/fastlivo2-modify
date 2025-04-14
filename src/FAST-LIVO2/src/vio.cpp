@@ -19,7 +19,7 @@ VIOManager::VIOManager()
 
 VIOManager::~VIOManager()
 {
-  delete visual_submap;
+  // delete visual_submap;
   for (auto& pair : warp_map) delete pair.second;
   warp_map.clear();
   for (auto& pair : feat_map) delete pair.second;
@@ -40,7 +40,9 @@ void VIOManager::setLidarToCameraExtrinsic(vector<double> &R, vector<double> &P)
 
 void VIOManager::initializeVIO()
 {
-  visual_submap = new SubSparseMap;
+  // visual_submap = new SubSparseMap;
+  visual_submap = std::make_shared<SubSparseMap>();
+
 
   fx = cam->fx();
   fy = cam->fy();
@@ -349,7 +351,7 @@ double VIOManager::calculateNCC(float *ref_patch, float *cur_patch, int patch_si
   return numerator / sqrt(demoniator1 * demoniator2 + 1e-10);
 }
 
-void VIOManager::retrieveFromVisualSparseMap(cv::Mat img, vector<pointWithVar> &pg, const unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &plane_map)
+void VIOManager::retrieveFromVisualSparseMap(cv::Mat img, vector<pointWithVar> &pg, const unordered_map<VOXEL_LOCATION, std::shared_ptr<VoxelOctoTree >> &plane_map)
 {
   if (feat_map.size() <= 0) return;
   double ts0 = omp_get_wtime();
@@ -572,7 +574,7 @@ void VIOManager::retrieveFromVisualSparseMap(cv::Mat img, vector<pointWithVar> &
           auto iter = plane_map.find(sample_pos);
           if (iter != plane_map.end())
           {
-            VoxelOctoTree *current_octo;
+            std::shared_ptr<VoxelOctoTree>current_octo;
             current_octo = iter->second->find_correspond(sample_point_w);
             if (current_octo->plane_ptr_->is_plane_)
             {
@@ -974,7 +976,7 @@ void VIOManager::updateVisualMapPoints(cv::Mat img)
   // printf("[ VIO ] Update %d points in visual submap\n", update_num);
 }
 
-void VIOManager::updateReferencePatch(const unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &plane_map)
+void VIOManager::updateReferencePatch(const unordered_map<VOXEL_LOCATION, std::shared_ptr<VoxelOctoTree>> &plane_map)
 {
   if (total_points == 0) return;
 
@@ -998,7 +1000,7 @@ void VIOManager::updateReferencePatch(const unordered_map<VOXEL_LOCATION, VoxelO
     auto iter = plane_map.find(position);
     if (iter != plane_map.end())
     {
-      VoxelOctoTree *current_octo;
+      std::shared_ptr<VoxelOctoTree>current_octo;
       current_octo = iter->second->find_correspond(p_w);
       if (current_octo->plane_ptr_->is_plane_)
       {
@@ -1107,7 +1109,7 @@ void VIOManager::updateReferencePatch(const unordered_map<VOXEL_LOCATION, VoxelO
   }
 }
 
-void VIOManager::projectPatchFromRefToCur(const unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &plane_map)
+void VIOManager::projectPatchFromRefToCur(const unordered_map<VOXEL_LOCATION, std::shared_ptr<VoxelOctoTree>> &plane_map)
 {
   if (total_points == 0) return;
   // if(new_frame_->id_ != 2) return; //124
@@ -1791,7 +1793,7 @@ void VIOManager::dumpDataForColmap()
   cnt++;
 }
 
-void VIOManager::processFrame(cv::Mat &img, vector<pointWithVar> &pg, const unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &feat_map, double img_time)
+void VIOManager::processFrame(cv::Mat &img, vector<pointWithVar> &pg, const unordered_map<VOXEL_LOCATION, std::shared_ptr<VoxelOctoTree >> &feat_map, double img_time)
 {
   if (width != img.cols || height != img.rows)
   {

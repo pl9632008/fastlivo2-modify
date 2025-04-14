@@ -26,6 +26,7 @@ which is included as part of this source code package.
 #include <unordered_map>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <memory>
 
 #define VOXELMAP_HASH_P 116101
 #define VOXELMAP_MAX_N 10000000000
@@ -126,16 +127,20 @@ struct DS_POINT
 
 void calcBodyCov(Eigen::Vector3d &pb, const float range_inc, const float degree_inc, Eigen::Matrix3d &cov);
 
-class VoxelOctoTree
+class VoxelOctoTree : public std::enable_shared_from_this<VoxelOctoTree>
 {
 
 public:
   VoxelOctoTree() = default;
   std::vector<pointWithVar> temp_points_;
-  VoxelPlane *plane_ptr_;
+  // VoxelPlane *plane_ptr_;
+  std::shared_ptr<VoxelPlane> plane_ptr_;
   int layer_;
   int octo_state_; // 0 is end of tree, 1 is not
-  VoxelOctoTree *leaves_[8];
+
+  // VoxelOctoTree *leaves_[8];
+  std::shared_ptr<VoxelOctoTree> leaves_[8];
+
   double voxel_center_[3]; // x, y, z
   std::vector<int> layer_init_num_;
   float quater_length_;
@@ -162,24 +167,26 @@ public:
     {
       leaves_[i] = nullptr;
     }
-    plane_ptr_ = new VoxelPlane;
+    // plane_ptr_ = new VoxelPlane;
+    plane_ptr_ = std::make_shared<VoxelPlane>();
+
   }
 
   ~VoxelOctoTree()
   {
     for (int i = 0; i < 8; i++)
     {
-      delete leaves_[i];
+      // delete leaves_[i];
     }
-    delete plane_ptr_;
+    // delete plane_ptr_;
   }
-  void init_plane(const std::vector<pointWithVar> &points, VoxelPlane *plane);
+  void init_plane(const std::vector<pointWithVar> &points, std::shared_ptr<VoxelPlane>plane);
   void init_octo_tree();
   void cut_octo_tree();
   void UpdateOctoTree(const pointWithVar &pv);
 
-  VoxelOctoTree *find_correspond(Eigen::Vector3d pw);
-  VoxelOctoTree *Insert(const pointWithVar &pv);
+  std::shared_ptr<VoxelOctoTree> find_correspond(Eigen::Vector3d pw);
+  std::shared_ptr<VoxelOctoTree> Insert(const pointWithVar &pv);
 };
 
 void loadVoxelConfig(ros::NodeHandle &nh, VoxelMapConfig &voxel_config);
@@ -191,7 +198,7 @@ public:
   VoxelMapConfig config_setting_;
   int current_frame_id_ = 0;
   ros::Publisher voxel_map_pub_;
-  std::unordered_map<VOXEL_LOCATION, VoxelOctoTree *> voxel_map_;
+  std::unordered_map<VOXEL_LOCATION, std::shared_ptr<VoxelOctoTree>> voxel_map_;
 
   PointCloudXYZI::Ptr feats_undistort_;
   PointCloudXYZI::Ptr feats_down_body_;
@@ -217,7 +224,7 @@ public:
   std::vector<pointWithVar> pv_list_;
   std::vector<PointToPlane> ptpl_list_;
 
-  VoxelMapManager(VoxelMapConfig &config_setting, std::unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &voxel_map)
+  VoxelMapManager(VoxelMapConfig &config_setting, std::unordered_map<VOXEL_LOCATION, std::shared_ptr<VoxelOctoTree>> &voxel_map)
       : config_setting_(config_setting), voxel_map_(voxel_map)
   {
     current_frame_id_ = 0;
@@ -237,7 +244,7 @@ public:
 
   void BuildResidualListOMP(std::vector<pointWithVar> &pv_list, std::vector<PointToPlane> &ptpl_list);
 
-  void build_single_residual(pointWithVar &pv, const VoxelOctoTree *current_octo, const int current_layer, bool &is_sucess, double &prob,
+  void build_single_residual(pointWithVar &pv, std::shared_ptr<VoxelOctoTree>current_octo, const int current_layer, bool &is_sucess, double &prob,
                              PointToPlane &single_ptpl);
 
   void pubVoxelMap();
@@ -246,7 +253,7 @@ public:
   void clearMemOutOfMap(const int& x_max,const int& x_min,const int& y_max,const int& y_min,const int& z_max,const int& z_min );
 
 private:
-  void GetUpdatePlane(const VoxelOctoTree *current_octo, const int pub_max_voxel_layer, std::vector<VoxelPlane> &plane_list);
+  void GetUpdatePlane(std::shared_ptr<VoxelOctoTree> current_octo, const int pub_max_voxel_layer, std::vector<VoxelPlane> &plane_list);
 
   void pubSinglePlane(visualization_msgs::MarkerArray &plane_pub, const std::string plane_ns, const VoxelPlane &single_plane, const float alpha,
                       const Eigen::Vector3d rgb);
