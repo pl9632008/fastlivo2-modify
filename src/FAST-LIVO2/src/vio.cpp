@@ -254,7 +254,7 @@ void VIOManager::getImagePatch(cv::Mat img, V2D pc, std::shared_ptr<float[]>patc
 
 
 
-void VIOManager::insertPointIntoVoxelMap(VisualPoint *pt_new)
+void VIOManager::insertPointIntoVoxelMap(std::shared_ptr<VisualPoint> pt_new)
 {
   V3D pt_w(pt_new->pos_[0], pt_new->pos_[1], pt_new->pos_[2]);
   double voxel_size = 0.5;
@@ -481,12 +481,14 @@ void VIOManager::retrieveFromVisualSparseMap(cv::Mat img, vector<pointWithVar> &
     if (corre_voxel != feat_map.end())
     {
       bool voxel_in_fov = false;
-      std::vector<VisualPoint *> &voxel_points = corre_voxel->second->voxel_points;
+      std::vector< std::shared_ptr< VisualPoint> > &voxel_points = corre_voxel->second->voxel_points;
       int voxel_num = voxel_points.size();
 
       for (int i = 0; i < voxel_num; i++)
       {
-        VisualPoint *pt = voxel_points[i];
+       std::shared_ptr< VisualPoint> pt = voxel_points[i];
+
+
         if (pt == nullptr) continue;
         if (pt->obs_.size() == 0) continue;
 
@@ -554,13 +556,14 @@ void VIOManager::retrieveFromVisualSparseMap(cv::Mat img, vector<pointWithVar> &
         {
           bool voxel_in_fov = false;
 
-          std::vector<VisualPoint *> &voxel_points = corre_feat_map->second->voxel_points;
+          std::vector<std::shared_ptr< VisualPoint> > &voxel_points = corre_feat_map->second->voxel_points;
+
           int voxel_num = voxel_points.size();
           if (voxel_num == 0) continue;
 
           for (int j = 0; j < voxel_num; j++)
           {
-            VisualPoint *pt = voxel_points[j];
+           std::shared_ptr< VisualPoint> pt = voxel_points[j];
 
             if (pt == nullptr) continue;
             if (pt->obs_.size() == 0) continue;
@@ -641,7 +644,9 @@ void VIOManager::retrieveFromVisualSparseMap(cv::Mat img, vector<pointWithVar> &
     {
       // double t_1 = omp_get_wtime();
 
-      VisualPoint *pt = retrieve_voxel_points[i];
+      std::shared_ptr<VisualPoint> pt = retrieve_voxel_points[i];
+
+
       // visual_sub_map_cur.push_back(pt); // before
 
       V2D pc(new_frame_->w2c(pt->pos_));
@@ -902,54 +907,53 @@ void VIOManager::generateVisualMapPoints(cv::Mat img, vector<pointWithVar> &pg)
 
 
 ////////////////---------custom--------- ////////////////
-  int add = 0;
-  for (int i = 0; i < length; i++)
-  {
-    if (grid_num[i] == TYPE_POINTCLOUD) // && (scan_value[i]>=50))
-    {
-      pointWithVar pt_var = append_voxel_points[i];
-      V3D pt = pt_var.point_w;
+  // int add = 0;
+  // for (int i = 0; i < length; i++)
+  // {
+  //   if (grid_num[i] == TYPE_POINTCLOUD) // && (scan_value[i]>=50))
+  //   {
+  //     pointWithVar pt_var = append_voxel_points[i];
+  //     V3D pt = pt_var.point_w;
 
-      V3D norm_vec(new_frame_->T_f_w_.rotation_matrix() * pt_var.normal);
-      V3D dir(new_frame_->T_f_w_ * pt);
-      dir.normalize();
-      double cos_theta = dir.dot(norm_vec);
-      // if(std::fabs(cos_theta)<0.34) continue; // 70 degree
-      V2D pc(new_frame_->w2c(pt));
+  //     V3D norm_vec(new_frame_->T_f_w_.rotation_matrix() * pt_var.normal);
+  //     V3D dir(new_frame_->T_f_w_ * pt);
+  //     dir.normalize();
+  //     double cos_theta = dir.dot(norm_vec);
+  //     // if(std::fabs(cos_theta)<0.34) continue; // 70 degree
+  //     V2D pc(new_frame_->w2c(pt));
       
-      std::shared_ptr<float[]> patch(new float[patch_size_total]);
-      getImagePatch(img, pc, patch, 0);
+  //     std::shared_ptr<float[]> patch(new float[patch_size_total]);
+  //     getImagePatch(img, pc, patch, 0);
       
-      VisualPoint pt_temp(pt);
-      VisualPoint *pt_new = &pt_temp;
+  //     // VisualPoint *pt_new = new VisualPoint(pt);
 
-      // VisualPoint *pt_new = new VisualPoint(pt);
+  //     std::shared_ptr<VisualPoint> pt_new = std::make_shared<VisualPoint>(pt);
 
-      Vector3d f = cam->cam2world(pc);
-      // Feature *ftr_new = new Feature(pt_new, patch, pc, f, new_frame_->T_f_w_, 0);
+  //     Vector3d f = cam->cam2world(pc);
+  //     // Feature *ftr_new = new Feature(pt_new, patch, pc, f, new_frame_->T_f_w_, 0);
 
-      std::shared_ptr<Feature> ftr_new = std::make_shared<Feature>(pt_new, patch, pc, f, new_frame_->T_f_w_, 0);
+  //     std::shared_ptr<Feature> ftr_new = std::make_shared<Feature>(pt_new, patch, pc, f, new_frame_->T_f_w_, 0);
 
-      ftr_new->img_ = img;
-      ftr_new->id_ = new_frame_->id_;
-      ftr_new->inv_expo_time_ = state->inv_expo_time;
+  //     ftr_new->img_ = img;
+  //     ftr_new->id_ = new_frame_->id_;
+  //     ftr_new->inv_expo_time_ = state->inv_expo_time;
 
-      pt_new->addFrameRef(ftr_new);
-      pt_new->covariance_ = pt_var.var;
-      pt_new->is_normal_initialized_ = true;
+  //     pt_new->addFrameRef(ftr_new);
+  //     pt_new->covariance_ = pt_var.var;
+  //     pt_new->is_normal_initialized_ = true;
 
-      if (cos_theta < 0) { pt_new->normal_ = -pt_var.normal; }
-      else { pt_new->normal_ = pt_var.normal; }
+  //     if (cos_theta < 0) { pt_new->normal_ = -pt_var.normal; }
+  //     else { pt_new->normal_ = pt_var.normal; }
       
-      pt_new->previous_normal_ = pt_new->normal_;
+  //     pt_new->previous_normal_ = pt_new->normal_;
 
-      insertPointIntoVoxelMap(pt_new);
+  //     insertPointIntoVoxelMap(pt_new);
       
-      add += 1;
+  //     add += 1;
 
-      // map_cur_frame.push_back(pt_new);
-    }
-  }
+  //     // map_cur_frame.push_back(pt_new);
+  //   }
+  // }
 ////////////////---------custom--------- ////////////////
 
 
@@ -971,7 +975,10 @@ void VIOManager::updateVisualMapPoints(cv::Mat img)
   SE3 pose_cur = new_frame_->T_f_w_;
   for (int i = 0; i < total_points; i++)
   {
-    VisualPoint *pt = visual_submap->voxel_points[i];
+    // VisualPoint *pt = visual_submap->voxel_points[i];
+
+    std::shared_ptr< VisualPoint> pt = visual_submap->voxel_points[i];
+
     if (pt == nullptr) continue;
     if (pt->is_converged_)
     { 
@@ -1040,7 +1047,7 @@ void VIOManager::updateReferencePatch(const unordered_map<VOXEL_LOCATION, std::s
 
   for (int i = 0; i < visual_submap->voxel_points.size(); i++)
   {
-    VisualPoint *pt = visual_submap->voxel_points[i];
+    std::shared_ptr pt = visual_submap->voxel_points[i];
 
     if (!pt->is_normal_initialized_) continue;
     if (pt->is_converged_) continue;
@@ -1201,7 +1208,7 @@ void VIOManager::projectPatchFromRefToCur(const unordered_map<VOXEL_LOCATION, st
   int num = 0;
   for (int i = 0; i < visual_submap->voxel_points.size(); i++)
   {
-    VisualPoint *pt = visual_submap->voxel_points[i];
+    std::shared_ptr <VisualPoint> pt = visual_submap->voxel_points[i];
 
     if (pt->is_normal_initialized_)
     {
@@ -1341,7 +1348,7 @@ void VIOManager::projectPatchFromRefToCur(const unordered_map<VOXEL_LOCATION, st
   }
   for (int i = 0; i < visual_submap->voxel_points.size(); i++)
   {
-    VisualPoint *pt = visual_submap->voxel_points[i];
+    std::shared_ptr <VisualPoint> pt = visual_submap->voxel_points[i];
 
     if (!pt->is_normal_initialized_) continue;
 
@@ -1417,7 +1424,7 @@ void VIOManager::precomputeReferencePatches(int level)
   {
     const int scale = (1 << level);
 
-    VisualPoint *pt = visual_submap->voxel_points[i];
+    std::shared_ptr< VisualPoint> pt = visual_submap->voxel_points[i];
     cv::Mat img = pt->ref_patch->img_;
 
     if (pt == nullptr) continue;
@@ -1514,7 +1521,7 @@ void VIOManager::updateStateInverse(cv::Mat img, int level)
 
       const int scale = (1 << level);
 
-      VisualPoint *pt = visual_submap->voxel_points[i];
+      std::shared_ptr <VisualPoint> pt = visual_submap->voxel_points[i];
 
       if (pt == nullptr) continue;
 
@@ -1641,7 +1648,7 @@ void VIOManager::updateState(cv::Mat img, int level)
       int scale = (1 << pyramid_level);
       float inv_scale = 1.0f / scale;
 
-      VisualPoint *pt = visual_submap->voxel_points[i];
+      std::shared_ptr< VisualPoint> pt = visual_submap->voxel_points[i];
 
       if (pt == nullptr) continue;
 
@@ -1794,7 +1801,7 @@ void VIOManager::plotTrackedPoints()
   // }
   for (int i = 0; i < total_points; i++)
   {
-    VisualPoint *pt = visual_submap->voxel_points[i];
+    std::shared_ptr< VisualPoint> pt = visual_submap->voxel_points[i];
     V2D pc(new_frame_->w2c(pt->pos_));
 
     if (visual_submap->errors[i] <= visual_submap->propa_errors[i])

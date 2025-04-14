@@ -31,7 +31,9 @@ struct Feature
   Vector2d px_;          //!< Coordinates in pixels on pyramid level 0.
   Vector3d f_;           //!< Unit-bearing vector of the patch feature.
   int level_;            //!< Image pyramid level where patch feature was extracted.
-  VisualPoint *point_;   //!< Pointer to 3D point which corresponds to the patch feature.
+  // VisualPoint *point_;   //!< Pointer to 3D point which corresponds to the patch feature.
+  std::shared_ptr<VisualPoint> point_;
+
   Vector2d grad_;        //!< Dominant gradient direction for edglets, normalized.
   SE3 T_f_w_;            //!< Pose of the frame where the patch feature was extracted.
 
@@ -42,7 +44,7 @@ struct Feature
   float mean_;           //!< Mean intensity of the image patch feature, used for normalization.
   double inv_expo_time_; //!< Inverse exposure time of the image where the patch feature was extracted.
   
-  Feature(VisualPoint *_point, std::shared_ptr< float[]> _patch, const Vector2d &_px, const Vector3d &_f, const SE3 &_T_f_w, int _level)
+  Feature(std::shared_ptr<VisualPoint> _point, std::shared_ptr< float[]> _patch, const Vector2d &_px, const Vector3d &_f, const SE3 &_T_f_w, int _level)
       : type_(CORNER), px_(_px), f_(_f), T_f_w_(_T_f_w), mean_(0), score_(0), level_(_level), patch_(_patch), point_(_point)
   {
   }

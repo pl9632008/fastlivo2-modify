@@ -29,7 +29,7 @@ struct SubSparseMap
   vector<float> errors;
   vector<vector<float>> warp_patch;
   vector<int> search_levels;
-  vector<VisualPoint *> voxel_points;
+  vector<std::shared_ptr< VisualPoint >> voxel_points;
   vector<double> inv_expo_list;
   vector<pointWithVar> add_from_voxel_map;
 
@@ -68,14 +68,16 @@ public:
 class VOXEL_POINTS
 {
 public:
-  std::vector<VisualPoint *> voxel_points;
+  std::vector<std::shared_ptr< VisualPoint >> voxel_points;
   int count;
   VOXEL_POINTS(int num) : count(num) {}
   ~VOXEL_POINTS() 
   { 
-    for (VisualPoint* vp : voxel_points) 
+    for ( std::shared_ptr< VisualPoint> vp : voxel_points) 
     {
-      if (vp != nullptr) { delete vp; vp = nullptr; }
+      if (vp != nullptr) { 
+        // delete vp; 
+        vp = nullptr; }
     }
   }
 };
@@ -128,7 +130,7 @@ public:
   unordered_map<VOXEL_LOCATION,  std::shared_ptr< VOXEL_POINTS >> feat_map;
   unordered_map<VOXEL_LOCATION, int> sub_feat_map; 
   unordered_map<int, std::shared_ptr <Warp>> warp_map;
-  vector<VisualPoint *> retrieve_voxel_points;
+  vector<std::shared_ptr <VisualPoint> > retrieve_voxel_points;
   vector<pointWithVar> append_voxel_points;
   FramePtr new_frame_;
   cv::Mat img_cp, img_rgb, img_test;
@@ -164,7 +166,7 @@ public:
                                      const V3D &xyz_ref, const V3D &normal_ref, const SE3 &T_cur_ref, const int level_ref, Matrix2d &A_cur_ref);
   void warpAffine(const Matrix2d &A_cur_ref, const cv::Mat &img_ref, const Vector2d &px_ref, const int level_ref, const int search_level,
                   const int pyramid_level, const int halfpatch_size, float *patch);
-  void insertPointIntoVoxelMap(VisualPoint *pt_new);
+  void insertPointIntoVoxelMap(std::shared_ptr<VisualPoint> pt_new);
   void plotTrackedPoints();
   void updateFrameState(StatesGroup state);
   void projectPatchFromRefToCur(const unordered_map<VOXEL_LOCATION, std::shared_ptr<VoxelOctoTree>> &plane_map);

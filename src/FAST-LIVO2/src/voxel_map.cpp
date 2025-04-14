@@ -947,11 +947,26 @@ void VoxelMapManager::mapJet(double v, double vmin, double vmax, uint8_t &r, uin
 
 void VoxelMapManager::mapSliding()
 {
-  if((position_last_ - last_slide_position).norm() < config_setting_.sliding_thresh)
+
+  if(init_flag_ == false){
+
+    last_exec_time_ = std::chrono::steady_clock::now();
+    init_flag_ = true;
+  }
+
+  auto now = std::chrono::steady_clock::now();
+  double elapsed = std::chrono::duration<double>(now - last_exec_time_).count();
+
+  if((position_last_ - last_slide_position).norm() < config_setting_.sliding_thresh && elapsed <=10)
   {
+    
+    std::cout<<"elapsed = "<<elapsed<<std::endl;
+
     std::cout<<RED<<"[DEBUG]: Last sliding length "<<(position_last_ - last_slide_position).norm()<<RESET<<"\n";
     return;
   }
+  last_exec_time_ = now;
+
 
   //get global id now
   last_slide_position = position_last_;

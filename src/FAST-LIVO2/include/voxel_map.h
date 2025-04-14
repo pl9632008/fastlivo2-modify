@@ -260,6 +260,12 @@ private:
   void CalcVectQuation(const Eigen::Vector3d &x_vec, const Eigen::Vector3d &y_vec, const Eigen::Vector3d &z_vec, geometry_msgs::Quaternion &q);
 
   void mapJet(double v, double vmin, double vmax, uint8_t &r, uint8_t &g, uint8_t &b);
+
+public:
+  std::chrono::steady_clock::time_point last_exec_time_ ;
+  bool init_flag_ = false;
+
+
 };
 typedef std::shared_ptr<VoxelMapManager> VoxelMapManagerPtr;
 

@@ -360,6 +360,7 @@ void LIVMapper::handleLIO()
   {
     lidar_map_inited = true;
     voxelmap_manager->BuildVoxelMap();
+
   }
 
   double t1 = omp_get_wtime();
@@ -424,7 +425,9 @@ void LIVMapper::handleLIO()
   
   double t4 = omp_get_wtime();
 
-  if(voxelmap_manager->config_setting_.map_sliding_en)
+
+
+  if(voxelmap_manager->config_setting_.map_sliding_en )
   {
     voxelmap_manager->mapSliding();
   }
