@@ -20,9 +20,9 @@ VIOManager::VIOManager()
 VIOManager::~VIOManager()
 {
   // delete visual_submap;
-  for (auto& pair : warp_map) delete pair.second;
+  // for (auto& pair : warp_map) delete pair.second;
   warp_map.clear();
-  for (auto& pair : feat_map) delete pair.second;
+  // for (auto& pair : feat_map) delete pair.second;
   feat_map.clear();
 }
 
@@ -226,6 +226,34 @@ void VIOManager::getImagePatch(cv::Mat img, V2D pc, float *patch_tmp, int level)
   }
 }
 
+
+void VIOManager::getImagePatch(cv::Mat img, V2D pc, std::shared_ptr<float[]>patch_tmp, int level)
+{
+  const float u_ref = pc[0];
+  const float v_ref = pc[1];
+  const int scale = (1 << level);
+  const int u_ref_i = floorf(pc[0] / scale) * scale;
+  const int v_ref_i = floorf(pc[1] / scale) * scale;
+  const float subpix_u_ref = (u_ref - u_ref_i) / scale;
+  const float subpix_v_ref = (v_ref - v_ref_i) / scale;
+  const float w_ref_tl = (1.0 - subpix_u_ref) * (1.0 - subpix_v_ref);
+  const float w_ref_tr = subpix_u_ref * (1.0 - subpix_v_ref);
+  const float w_ref_bl = (1.0 - subpix_u_ref) * subpix_v_ref;
+  const float w_ref_br = subpix_u_ref * subpix_v_ref;
+  for (int x = 0; x < patch_size; x++)
+  {
+    uint8_t *img_ptr = (uint8_t *)img.data + (v_ref_i - patch_size_half * scale + x * scale) * width + (u_ref_i - patch_size_half * scale);
+    for (int y = 0; y < patch_size; y++, img_ptr += scale)
+    {
+      patch_tmp[patch_size_total * level + x * patch_size + y] =
+          w_ref_tl * img_ptr[0] + w_ref_tr * img_ptr[scale] + w_ref_bl * img_ptr[scale * width] + w_ref_br * img_ptr[scale * width + scale];
+    }
+  }
+}
+
+
+
+
 void VIOManager::insertPointIntoVoxelMap(VisualPoint *pt_new)
 {
   V3D pt_w(pt_new->pos_[0], pt_new->pos_[1], pt_new->pos_[2]);
@@ -245,7 +273,10 @@ void VIOManager::insertPointIntoVoxelMap(VisualPoint *pt_new)
   }
   else
   {
-    VOXEL_POINTS *ot = new VOXEL_POINTS(0);
+    // VOXEL_POINTS *ot = new VOXEL_POINTS(0);
+
+    std::shared_ptr< VOXEL_POINTS> ot = std::make_shared<VOXEL_POINTS>(0);
+
     ot->voxel_points.push_back(pt_new);
     feat_map[position] = ot;
   }
@@ -644,7 +675,10 @@ void VIOManager::retrieveFromVisualSparseMap(cv::Mat img, vector<pointWithVar> &
       // t_2 += omp_get_wtime() - t_1;
 
       // t_1 = omp_get_wtime();
-      Feature *ref_ftr;
+      // Feature *ref_ftr;
+
+      std::shared_ptr<Feature> ref_ftr;
+
       std::vector<float> patch_wrap(warp_len);
 
       int search_level;
@@ -666,14 +700,19 @@ void VIOManager::retrieveFromVisualSparseMap(cv::Mat img, vector<pointWithVar> &
         {
           for (auto it = pt->obs_.begin(), ite = pt->obs_.end(); it != ite; ++it)
           {
-            Feature *ref_patch_temp = *it;
-            float *patch_temp = ref_patch_temp->patch_;
+           std::shared_ptr< Feature> ref_patch_temp = *it;
+            // float *patch_temp = ref_patch_temp->patch_;//
+            std::shared_ptr<float []> patch_temp = ref_patch_temp->patch_;
+
             float phtometric_errors = 0.0;
             int count = 0;
             for (auto itm = pt->obs_.begin(), itme = pt->obs_.end(); itm != itme; ++itm)
             {
               if ((*itm)->id_ == ref_patch_temp->id_) continue;
-              float *patch_cache = (*itm)->patch_;
+
+              // float *patch_cache = (*itm)->patch_;
+
+              std::shared_ptr<float []>patch_cache = (*itm)->patch_;
 
               for (int ind = 0; ind < patch_size_total; ind++)
               {
@@ -730,7 +769,10 @@ void VIOManager::retrieveFromVisualSparseMap(cv::Mat img, vector<pointWithVar> &
 
           search_level = getBestSearchLevel(A_cur_ref_zero, 2);
 
-          Warp *ot = new Warp(search_level, A_cur_ref_zero);
+          // Warp *ot = new Warp(search_level, A_cur_ref_zero);
+          std::shared_ptr<Warp> ot = std::make_shared<Warp>(search_level, A_cur_ref_zero);
+
+
           warp_map[ref_ftr->id_] = ot;
         }
       }
@@ -860,48 +902,54 @@ void VIOManager::generateVisualMapPoints(cv::Mat img, vector<pointWithVar> &pg)
 
 
 ////////////////---------custom--------- ////////////////
-  // int add = 0;
-  // for (int i = 0; i < length; i++)
-  // {
-  //   if (grid_num[i] == TYPE_POINTCLOUD) // && (scan_value[i]>=50))
-  //   {
-  //     pointWithVar pt_var = append_voxel_points[i];
-  //     V3D pt = pt_var.point_w;
+  int add = 0;
+  for (int i = 0; i < length; i++)
+  {
+    if (grid_num[i] == TYPE_POINTCLOUD) // && (scan_value[i]>=50))
+    {
+      pointWithVar pt_var = append_voxel_points[i];
+      V3D pt = pt_var.point_w;
 
-  //     V3D norm_vec(new_frame_->T_f_w_.rotation_matrix() * pt_var.normal);
-  //     V3D dir(new_frame_->T_f_w_ * pt);
-  //     dir.normalize();
-  //     double cos_theta = dir.dot(norm_vec);
-  //     // if(std::fabs(cos_theta)<0.34) continue; // 70 degree
-  //     V2D pc(new_frame_->w2c(pt));
+      V3D norm_vec(new_frame_->T_f_w_.rotation_matrix() * pt_var.normal);
+      V3D dir(new_frame_->T_f_w_ * pt);
+      dir.normalize();
+      double cos_theta = dir.dot(norm_vec);
+      // if(std::fabs(cos_theta)<0.34) continue; // 70 degree
+      V2D pc(new_frame_->w2c(pt));
       
-  //     float *patch = new float[patch_size_total];
-  //     getImagePatch(img, pc, patch, 0);
-
-  //     VisualPoint *pt_new = new VisualPoint(pt);
-
-  //     Vector3d f = cam->cam2world(pc);
-  //     Feature *ftr_new = new Feature(pt_new, patch, pc, f, new_frame_->T_f_w_, 0);
-  //     ftr_new->img_ = img;
-  //     ftr_new->id_ = new_frame_->id_;
-  //     ftr_new->inv_expo_time_ = state->inv_expo_time;
-
-  //     pt_new->addFrameRef(ftr_new);
-  //     pt_new->covariance_ = pt_var.var;
-  //     pt_new->is_normal_initialized_ = true;
-
-  //     if (cos_theta < 0) { pt_new->normal_ = -pt_var.normal; }
-  //     else { pt_new->normal_ = pt_var.normal; }
+      std::shared_ptr<float[]> patch(new float[patch_size_total]);
+      getImagePatch(img, pc, patch, 0);
       
-  //     pt_new->previous_normal_ = pt_new->normal_;
+      VisualPoint pt_temp(pt);
+      VisualPoint *pt_new = &pt_temp;
 
-  //     insertPointIntoVoxelMap(pt_new);
+      // VisualPoint *pt_new = new VisualPoint(pt);
+
+      Vector3d f = cam->cam2world(pc);
+      // Feature *ftr_new = new Feature(pt_new, patch, pc, f, new_frame_->T_f_w_, 0);
+
+      std::shared_ptr<Feature> ftr_new = std::make_shared<Feature>(pt_new, patch, pc, f, new_frame_->T_f_w_, 0);
+
+      ftr_new->img_ = img;
+      ftr_new->id_ = new_frame_->id_;
+      ftr_new->inv_expo_time_ = state->inv_expo_time;
+
+      pt_new->addFrameRef(ftr_new);
+      pt_new->covariance_ = pt_var.var;
+      pt_new->is_normal_initialized_ = true;
+
+      if (cos_theta < 0) { pt_new->normal_ = -pt_var.normal; }
+      else { pt_new->normal_ = pt_var.normal; }
       
-  //     add += 1;
+      pt_new->previous_normal_ = pt_new->normal_;
 
-  //     // map_cur_frame.push_back(pt_new);
-  //   }
-  // }
+      insertPointIntoVoxelMap(pt_new);
+      
+      add += 1;
+
+      // map_cur_frame.push_back(pt_new);
+    }
+  }
 ////////////////---------custom--------- ////////////////
 
 
@@ -934,11 +982,17 @@ void VIOManager::updateVisualMapPoints(cv::Mat img)
     V2D pc(new_frame_->w2c(pt->pos_));
     bool add_flag = false;
     
-    float *patch_temp = new float[patch_size_total];
+    // float *patch_temp = new float[patch_size_total];
+
+    std::shared_ptr<float[]> patch_temp(new float[patch_size_total]);
     getImagePatch(img, pc, patch_temp, 0);
+    
     // TODO: condition: distance and view_angle
     // Step 1: time
-    Feature *last_feature = pt->obs_.back();
+    // Feature *last_feature = pt->obs_.back();
+
+    std::shared_ptr< Feature> last_feature = pt->obs_.back();
+
     // if(new_frame_->id_ >= last_feature->id_ + 10) add_flag = true; // 10
 
     // Step 2: delta_pose
@@ -956,7 +1010,7 @@ void VIOManager::updateVisualMapPoints(cv::Mat img)
     // Maintain the size of 3D point observation features.
     if (pt->obs_.size() >= 30)
     {
-      Feature *ref_ftr;
+     std::shared_ptr< Feature> ref_ftr;
       pt->findMinScoreFeature(new_frame_->pos(), ref_ftr);
       pt->deleteFeatureRef(ref_ftr);
       // cout<<"pt->obs_.size() exceed 20 !!!!!!"<<endl;
@@ -966,7 +1020,11 @@ void VIOManager::updateVisualMapPoints(cv::Mat img)
       update_num += 1;
       update_flag[i] = 1;
       Vector3d f = cam->cam2world(pc);
-      Feature *ftr_new = new Feature(pt, patch_temp, pc, f, new_frame_->T_f_w_, visual_submap->search_levels[i]);
+      // Feature *ftr_new = new Feature(pt, patch_temp, pc, f, new_frame_->T_f_w_, visual_submap->search_levels[i]);
+
+      std::shared_ptr<Feature> ftr_new = std::make_shared<Feature>(pt, patch_temp, pc, f, new_frame_->T_f_w_, visual_submap->search_levels[i]);
+
+
       ftr_new->img_ = img;
       ftr_new->id_ = new_frame_->id_;
       ftr_new->inv_expo_time_ = state->inv_expo_time;
@@ -1046,8 +1104,10 @@ void VIOManager::updateReferencePatch(const unordered_map<VOXEL_LOCATION, std::s
     float score_max = -1000.;
     for (auto it = pt->obs_.begin(), ite = pt->obs_.end(); it != ite; ++it)
     {
-      Feature *ref_patch_temp = *it;
-      float *patch_temp = ref_patch_temp->patch_;
+      auto ref_patch_temp = *it;
+      auto patch_temp = ref_patch_temp->patch_;
+      
+      
       float NCC_up = 0.0;
       float NCC_down1 = 0.0;
       float NCC_down2 = 0.0;
@@ -1064,7 +1124,10 @@ void VIOManager::updateReferencePatch(const unordered_map<VOXEL_LOCATION, std::s
       float ref_mean;
       if (abs(ref_patch_temp->mean_) < 1e-6)
       {
-        float ref_sum = std::accumulate(patch_temp, patch_temp + patch_size_total, 0.0);
+        // float ref_sum = std::accumulate(patch_temp, patch_temp + patch_size_total, 0.0);
+
+        float ref_sum = std::accumulate(patch_temp.get(), patch_temp.get() + patch_size_total, 0.0);
+
         ref_mean = ref_sum / patch_size_total;
         ref_patch_temp->mean_ = ref_mean;
       }
@@ -1072,12 +1135,14 @@ void VIOManager::updateReferencePatch(const unordered_map<VOXEL_LOCATION, std::s
       for (auto itm = pt->obs_.begin(), itme = pt->obs_.end(); itm != itme; ++itm)
       {
         if ((*itm)->id_ == ref_patch_temp->id_) continue;
-        float *patch_cache = (*itm)->patch_;
+        auto patch_cache = (*itm)->patch_;
 
         float other_mean;
         if (abs((*itm)->mean_) < 1e-6)
         {
-          float other_sum = std::accumulate(patch_cache, patch_cache + patch_size_total, 0.0);
+          // float other_sum = std::accumulate(patch_cache, patch_cache + patch_size_total, 0.0);
+          float other_sum = std::accumulate(patch_cache.get(), patch_cache.get() + patch_size_total, 0.0);
+
           other_mean = other_sum / patch_size_total;
           (*itm)->mean_ = other_mean;
         }
@@ -1140,7 +1205,7 @@ void VIOManager::projectPatchFromRefToCur(const unordered_map<VOXEL_LOCATION, st
 
     if (pt->is_normal_initialized_)
     {
-      Feature *ref_ftr;
+     std::shared_ptr<Feature> ref_ftr;
       ref_ftr = pt->ref_patch;
       // Feature* ref_ftr;
       V2D pc(new_frame_->w2c(pt->pos_));
@@ -1280,7 +1345,7 @@ void VIOManager::projectPatchFromRefToCur(const unordered_map<VOXEL_LOCATION, st
 
     if (!pt->is_normal_initialized_) continue;
 
-    Feature *ref_ftr;
+    std::shared_ptr<Feature> ref_ftr;
     V2D pc(new_frame_->w2c(pt->pos_));
     ref_ftr = pt->ref_patch;
 

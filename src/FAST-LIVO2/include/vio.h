@@ -125,9 +125,9 @@ public:
   MatrixXd K, H_sub_inv;
 
   ofstream fout_camera, fout_colmap;
-  unordered_map<VOXEL_LOCATION,  VOXEL_POINTS *> feat_map;
+  unordered_map<VOXEL_LOCATION,  std::shared_ptr< VOXEL_POINTS >> feat_map;
   unordered_map<VOXEL_LOCATION, int> sub_feat_map; 
-  unordered_map<int, Warp *> warp_map;
+  unordered_map<int, std::shared_ptr <Warp>> warp_map;
   vector<VisualPoint *> retrieve_voxel_points;
   vector<pointWithVar> append_voxel_points;
   FramePtr new_frame_;
@@ -151,6 +151,8 @@ public:
   void setLidarToCameraExtrinsic(vector<double> &R, vector<double> &P);
   void initializeVIO();
   void getImagePatch(cv::Mat img, V2D pc, float *patch_tmp, int level);
+  void getImagePatch(cv::Mat img, V2D pc, std::shared_ptr<float[]>patch_tmp, int level);
+
   void computeProjectionJacobian(V3D p, MD(2, 3) & J);
   void computeJacobianAndUpdateEKF(cv::Mat img);
   void resetGrid();

@@ -25,18 +25,18 @@ VisualPoint::~VisualPoint()
 {
   for (auto it = obs_.begin(), ite = obs_.end(); it != ite; ++it)
   {
-    delete(*it);
+    // delete(*it);
   }
   obs_.clear();
   ref_patch = nullptr;
 }
 
-void VisualPoint::addFrameRef(Feature *ftr)
+void VisualPoint::addFrameRef(std::shared_ptr<Feature> ftr)
 {
   obs_.push_front(ftr);
 }
 
-void VisualPoint::deleteFeatureRef(Feature *ftr)
+void VisualPoint::deleteFeatureRef(std::shared_ptr< Feature>ftr)
 {
   if (ref_patch == ftr)
   {
@@ -47,14 +47,14 @@ void VisualPoint::deleteFeatureRef(Feature *ftr)
   {
     if ((*it) == ftr)
     {
-      delete((*it));
+      // delete((*it));
       obs_.erase(it);
       return;
     }
   }
 }
 
-bool VisualPoint::getCloseViewObs(const Vector3d &framepos, Feature *&ftr, const Vector2d &cur_px) const
+bool VisualPoint::getCloseViewObs(const Vector3d &framepos, std::shared_ptr< Feature >&ftr, const Vector2d &cur_px) const
 {
   // TODO: get frame with same point of view AND same pyramid level!
   if (obs_.size() <= 0) return false;
@@ -94,7 +94,7 @@ bool VisualPoint::getCloseViewObs(const Vector3d &framepos, Feature *&ftr, const
   return true;
 }
 
-void VisualPoint::findMinScoreFeature(const Vector3d &framepos, Feature *&ftr) const
+void VisualPoint::findMinScoreFeature(const Vector3d &framepos, std::shared_ptr<Feature> &ftr) const
 {
   auto min_it = obs_.begin();
   float min_score = std::numeric_limits<float>::max();
@@ -116,7 +116,7 @@ void VisualPoint::deleteNonRefPatchFeatures()
   {
     if (*it != ref_patch)
     {
-      delete *it;
+      // delete *it;
       it = obs_.erase(it);
     }
     else
