@@ -282,12 +282,12 @@ void LIVMapper::handleVIO()
     
   if (pcl_w_wait_pub->empty() || (pcl_w_wait_pub == nullptr)) 
   {
-    std::cout << "[ VIO ] No point!!!" << std::endl;
+    // std::cout << "[ VIO ] No point!!!" << std::endl;
     return;
   }
 
     
-  std::cout << "[ VIO ] Raw feature num: " << pcl_w_wait_pub->points.size() << std::endl;
+  // std::cout << "[ VIO ] Raw feature num: " << pcl_w_wait_pub->points.size() << std::endl;
 
   if (fabs((LidarMeasures.last_lio_update_time - _first_lidar_time) - plot_time) < (frame_cnt / 2 * 0.1)) 
   {
@@ -338,7 +338,7 @@ void LIVMapper::handleLIO()
            
   if (feats_undistort->empty() || (feats_undistort == nullptr)) 
   {
-    std::cout << "[ LIO ]: No point!!!" << std::endl;
+    // std::cout << "[ LIO ]: No point!!!" << std::endl;
     return;
   }
 
@@ -852,7 +852,9 @@ void LIVMapper::img_cbk(const sensor_msgs::ImageConstPtr &msg_in)
   // double msg_header_time =  msg->header.stamp.toSec();
   double msg_header_time = msg->header.stamp.toSec() + img_time_offset;
   if (abs(msg_header_time - last_timestamp_img) < 0.001) return;
-  ROS_INFO("Get image, its header time: %.6f", msg_header_time);
+
+  // ROS_INFO("Get image, its header time: %.6f", msg_header_time);
+
   if (last_timestamp_lidar < 0) return;
 
   if (msg_header_time < last_timestamp_img)

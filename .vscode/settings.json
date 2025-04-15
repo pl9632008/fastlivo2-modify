@@ -64,5 +64,6 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "eigen": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/nvidia/wjd/fastlivo2/src/FAST-LIVO2"
 }

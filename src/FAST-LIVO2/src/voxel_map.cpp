@@ -653,9 +653,8 @@ void VoxelMapManager::UpdateVoxelMap(const std::vector<pointWithVar> &input_poin
 
     }
   }
-  std::cout<<"voxel_map_.size = "<<voxel_map_.size()<<std::endl;
-  std::cout<<"bucket_count() = "<<voxel_map_.bucket_count()<<std::endl;
 
+  
 }
 
 void VoxelMapManager::BuildResidualListOMP(std::vector<pointWithVar> &pv_list, std::vector<PointToPlane> &ptpl_list)
@@ -960,9 +959,9 @@ void VoxelMapManager::mapSliding()
   if((position_last_ - last_slide_position).norm() < config_setting_.sliding_thresh && elapsed <=10)
   {
     
-    std::cout<<"elapsed = "<<elapsed<<std::endl;
-
-    std::cout<<RED<<"[DEBUG]: Last sliding length "<<(position_last_ - last_slide_position).norm()<<RESET<<"\n";
+    // std::cout<<RED<<"[DEBUG]: Last sliding length "<<(position_last_ - last_slide_position).norm()<<
+    //                 ", elapsed time = "<<elapsed<<
+    //           RESET<<"\n";
     return;
   }
   last_exec_time_ = now;
@@ -1005,6 +1004,10 @@ void VoxelMapManager::clearMemOutOfMap(const int& x_max,const int& x_min,const i
       ++it;
     }
   }
+
+  std::cout<<YELLOW<<"before rehash voxel_map_.bucket_count() = "<<voxel_map_.bucket_count()<<" root voxels"<<RESET<<"\n";
+  voxel_map_.rehash(voxel_map_.size());
   std::cout<<RED<<"[DEBUG]: Delete "<<delete_voxel_cout<<" root voxels"<<RESET<<"\n";
+  std::cout<<GREEN<<"after  rehash voxel_map_.bucket_count() = "<<voxel_map_.bucket_count()<<" root voxels"<<RESET<<"\n";
   // std::cout<<RED<<"[DEBUG]: Delete "<<delete_voxel_cout<<" voxels using "<<delete_time<<" s"<<RESET<<"\n";
 }

@@ -1022,6 +1022,9 @@ void VIOManager::updateVisualMapPoints(cv::Mat img)
       pt->deleteFeatureRef(ref_ftr);
       // cout<<"pt->obs_.size() exceed 20 !!!!!!"<<endl;
     }
+
+    add_flag = false;
+
     if (add_flag)
     {
       update_num += 1;
