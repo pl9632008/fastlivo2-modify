@@ -27,6 +27,7 @@ which is included as part of this source code package.
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <memory>
+#include <random>
 
 #define VOXELMAP_HASH_P 116101
 #define VOXELMAP_MAX_N 10000000000
@@ -251,6 +252,10 @@ public:
 
   void mapSliding();
   void clearMemOutOfMap(const int& x_max,const int& x_min,const int& y_max,const int& y_min,const int& z_max,const int& z_min );
+
+  void clearMemOfMap();
+
+
 
 private:
   void GetUpdatePlane(std::shared_ptr<VoxelOctoTree> current_octo, const int pub_max_voxel_layer, std::vector<VoxelPlane> &plane_list);

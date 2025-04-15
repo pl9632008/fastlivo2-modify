@@ -58,7 +58,7 @@ lio:
 
 local_map:  
   map_sliding_en: true
-  half_map_size: 60
+  half_map_size: 50
   sliding_thresh: 8
 
 uav:

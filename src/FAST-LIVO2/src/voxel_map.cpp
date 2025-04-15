@@ -982,7 +982,53 @@ void VoxelMapManager::mapSliding()
                     (int64_t)loc_xyz[2] + config_setting_.half_map_size, (int64_t)loc_xyz[2] - config_setting_.half_map_size);
   double t_sliding_end = omp_get_wtime();
   std::cout<<RED<<"[DEBUG]: Map sliding using "<<t_sliding_end - t_sliding_start<<" secs"<<RESET<<"\n";
+  
+  clearMemOfMap();
+  double t_clear_map = omp_get_wtime();
+  std::cout<<RED<<"[DEBUG]: clearMemOfMap using "<<t_clear_map - t_sliding_end<<" secs"<<RESET<<"\n";
+
   return;
+}
+
+
+
+void VoxelMapManager::clearMemOfMap()
+{
+  int delete_voxel_cout = 0;
+
+  int max_size = 10000;
+  if(voxel_map_.size()<=max_size) return;
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  int remaining = max_size;
+  int total = voxel_map_.size();
+
+  for (auto it = voxel_map_.begin(); it != voxel_map_.end(); )
+  {
+  
+    double keep_prob = static_cast<double>(remaining)/total;
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+    bool keep_flag = dis(gen) < keep_prob;
+    if(keep_flag){
+
+      --remaining;
+      ++it;
+
+    }else{
+
+      it = voxel_map_.erase(it);
+      delete_voxel_cout++;
+
+    }
+
+    --total;
+  }
+  voxel_map_.reserve(voxel_map_.size());
+
+  std::cout<<BLUE<<"random remove in map: "<<delete_voxel_cout<<" voxel_map_.bucket_count() = "<<voxel_map_.bucket_count()<<RESET<<"\n";
+
+
 }
 
 void VoxelMapManager::clearMemOutOfMap(const int& x_max,const int& x_min,const int& y_max,const int& y_min,const int& z_max,const int& z_min )
