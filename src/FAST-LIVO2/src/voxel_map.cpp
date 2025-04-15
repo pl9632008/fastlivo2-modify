@@ -1005,9 +1005,9 @@ void VoxelMapManager::clearMemOutOfMap(const int& x_max,const int& x_min,const i
     }
   }
 
-  std::cout<<YELLOW<<"before rehash voxel_map_.bucket_count() = "<<voxel_map_.bucket_count()<<" root voxels"<<RESET<<"\n";
+  std::cout<<YELLOW<<"before rehash voxel_map_.bucket_count() = "<<voxel_map_.bucket_count()<<RESET<<"\n";
   voxel_map_.rehash(voxel_map_.size());
   std::cout<<RED<<"[DEBUG]: Delete "<<delete_voxel_cout<<" root voxels"<<RESET<<"\n";
-  std::cout<<GREEN<<"after  rehash voxel_map_.bucket_count() = "<<voxel_map_.bucket_count()<<" root voxels"<<RESET<<"\n";
+  std::cout<<GREEN<<"after  rehash voxel_map_.bucket_count() = "<<voxel_map_.bucket_count()<<RESET<<"\n";
   // std::cout<<RED<<"[DEBUG]: Delete "<<delete_voxel_cout<<" voxels using "<<delete_time<<" s"<<RESET<<"\n";
 }
