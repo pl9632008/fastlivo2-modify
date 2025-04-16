@@ -996,7 +996,7 @@ void VoxelMapManager::clearMemOfMap()
 {
   int delete_voxel_cout = 0;
 
-  int max_size = 10000;
+  int max_size = 2000;
   if(voxel_map_.size()<=max_size) return;
 
   std::random_device rd;

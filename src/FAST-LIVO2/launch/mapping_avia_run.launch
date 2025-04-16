@@ -1,9 +1,10 @@
 <launch>
 <!-- Launch file for Livox AVIA LiDAR -->
    <include file="$(find livox_ros_driver2)/launch_ROS1/no_rviz_HAP.launch"/>
+   <include file="$(find derail)/launch/derail.launch"/>
 
 
-	<arg name="rviz" default="true" />
+	<arg name="rviz" default="false" />
 
 	<rosparam command="load" file="$(find fast_livo)/config/avia_test.yaml" />
 
